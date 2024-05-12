@@ -6,3 +6,5 @@ mkdir -p tmp
 chmod ug+rwX tmp
 mv ibp-ncdu_mount_scan-base_version-1.0.0.sif tmp/
 ```
+
+Can also be run using only docker
