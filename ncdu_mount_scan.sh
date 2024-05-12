@@ -32,9 +32,9 @@ function format_mount_flags() {
   done
 }
 
+image_tag="ibp-ncdu_mount_scan-base:"$(cat "docker/VERSION")
 singularity_image_tag="ibp-ncdu_mount_scan-base_version-$(cat "docker/VERSION").sif"
 
-mount_flags=$(format_mount_flags "-B")
 
 FAKE_HOME="/ncdu_mount_scan"
 export SINGULARITY_HOME="${FAKE_HOME}"
@@ -42,9 +42,33 @@ export APPTAINER_HOME="${FAKE_HOME}"
 
 #echo "${mount_flags}"
 
-exec singularity shell \
-     --contain \
-     --cleanenv \
-     ${mount_flags} \
-     "tmp/${singularity_image_tag}"
+if command -v singularity >/dev/null 2>&1; then
+  echo "Running using local Singularity..."
 
+  mount_flags=$(format_mount_flags "-B")
+  exec singularity shell \
+       --contain \
+       --cleanenv \
+       ${mount_flags} \
+       "tmp/${singularity_image_tag}"
+
+elif command -v apptainer >/dev/null 2>&1; then
+  echo "Running using local Apptainer..."
+
+  mount_flags=$(format_mount_flags "-B")
+  exec singularity shell \
+       --contain \
+       --cleanenv \
+       ${mount_flags} \
+       "tmp/${singularity_image_tag}"
+else 
+  echo "Singularity/Apptainer not found, using Docker..."
+
+  mount_flags=$(format_mount_flags "-v")
+  exec docker run \
+       --rm \
+       -it \
+       ${mount_flags} \
+       "${image_tag}" \
+       /bin/bash
+fi
